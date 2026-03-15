@@ -6,6 +6,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    username: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     email: {
       type: String,
       required: true,
@@ -19,6 +24,10 @@ const userSchema = new mongoose.Schema(
     isMailVerified: {
       type: Boolean,
       default: false,
+    },
+    role: {
+      type: String,
+      enum: ["learner", "expert", "admin"],
     },
   },
   {

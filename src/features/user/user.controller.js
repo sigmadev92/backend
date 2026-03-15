@@ -1,5 +1,5 @@
-import CustomError from "../../middlewares/errorHandler";
-import { addUserRepo, getUserByMailRepo } from "./user.repo";
+import CustomError from "../../middlewares/errorHandler.js";
+import { addUserRepo, getUserByMailRepo, removeUserRepo } from "./user.repo.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 const registerUser = async (req, res, next) => {
@@ -43,4 +43,32 @@ const loginUser = async (req, res, next) => {
   }
 };
 
-export { registerUser, loginUser };
+const logOut = (req, res, next) => {
+  res
+    .status(200)
+    .cookie("proj_eng", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    })
+    .json({ success: true, msg: "logout successful" });
+};
+
+const deleteUserAccount = async (req, res, next) => {
+  const { _id } = req.USER;
+  const result = await removeUserRepo(_id);
+  if (!result) {
+    return next(new CustomError(403, "Invalid User Id"));
+  }
+  res
+    .status(200)
+    .cookie("blog_token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    })
+    .json({
+      success: true,
+      msg: "Account and token deleted and loged out successfully",
+    });
+};
+
+export { registerUser, loginUser, logOut, deleteUserAccount };
