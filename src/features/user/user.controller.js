@@ -1,15 +1,21 @@
 import CustomError from "../../middlewares/errorHandler.js";
-import { addUserRepo, getUserByMailRepo, removeUserRepo } from "./user.repo.js";
+import {
+  addUserRepo,
+  getUserByIdRepo,
+  getUserByMailRepo,
+  removeUserRepo,
+} from "./user.repo.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { JWT_SECRET_KEY, NODE_ENV } from "../../config/env.js";
 const registerUser = async (req, res, next) => {
   const { fullName, email, password } = req.body;
   try {
-    const hashedPassword = await bcrypt.hash(password, "11");
+    const hashedPassword = await bcrypt.hash(password, 11);
     await addUserRepo({ fullName, email, password: hashedPassword });
-    res.status(201).json({ message: "User Registered" });
+    res.status(201).json({ user: { fullName, email } });
   } catch (error) {
-    next(err);
+    next(error);
   }
 };
 
@@ -26,7 +32,7 @@ const loginUser = async (req, res, next) => {
       return next(new CustomError(400, "Invalid Credentials"));
     }
 
-    const token = jwt.sign({ _id: user._id, email });
+    const token = jwt.sign({ _id: user._id, email }, JWT_SECRET_KEY);
     const cookieOptions = {
       httpOnly: true,
       sameSite: NODE_ENV === "production" ? "none" : "lax",
@@ -39,8 +45,18 @@ const loginUser = async (req, res, next) => {
       .cookie("proj_eng", token, cookieOptions)
       .json({ success: true, user, token });
   } catch (error) {
-    next(err);
+    next(error);
   }
+};
+
+const getAuth = async (req, res, next) => {
+  const userId = req.USER._id;
+  const user = await getUserByIdRepo(userId);
+
+  if (!user) {
+    return next(new CustomError(403, "User Not found"));
+  }
+  res.status(200).json({ user });
 };
 
 const logOut = (req, res, next) => {
@@ -71,4 +87,4 @@ const deleteUserAccount = async (req, res, next) => {
     });
 };
 
-export { registerUser, loginUser, logOut, deleteUserAccount };
+export { registerUser, loginUser, logOut, deleteUserAccount, getAuth };

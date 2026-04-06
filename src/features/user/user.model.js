@@ -6,10 +6,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    username: {
+    userName: {
       type: String,
-      unique: true,
-      required: true,
+      unique: [true, "This userName is not available"],
+      sparse: true,
+      match: /^[a-z][a-z0-9_-]{0,29}$/,
     },
     email: {
       type: String,
